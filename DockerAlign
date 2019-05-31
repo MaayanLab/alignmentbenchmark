@@ -1,0 +1,75 @@
+FROM continuumio/miniconda
+
+RUN export DEBIAN_FRONTEND=noninteractive; \
+    export DEBCONF_NONINTERACTIVE_SEEN=true; \
+    echo 'tzdata tzdata/Areas select Etc' | debconf-set-selections; \
+    echo 'tzdata tzdata/Zones/Etc select UTC' | debconf-set-selections; \
+    apt-get update -qqy \
+ && apt-get install -qqy --no-install-recommends \
+        tzdata \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /alignment/scripts
+RUN mkdir -p /alignment/quant
+RUN mkdir -p /alignment/quant
+RUN mkdir -p /alignment/quant
+RUN mkdir -p /alignment/quant
+
+
+RUN apt-get update && apt-get install -y \
+	vim \
+	wget \
+	r-base \
+	r-base-dev
+
+RUN R -e 'install.packages("plyr",repos="http://cran.rstudio.com/")'
+RUN R -e 'install.packages("stringr",repos="http://cran.rstudio.com/")'
+
+# Python installs
+RUN apt-get update && apt-get install -y \
+	python \
+	python-dev \
+	python-pip \
+	python-setuptools \
+	python-h5py
+
+# pip installs
+RUN pip install boto
+RUN pip install tinys3
+
+RUN apt-get install -y python3-pip
+RUN pip3 install awscli
+
+RUN apt-get install -y -qq groff
+RUN apt-get install -y -qq less
+RUN apt-get install -y -qq pigz
+
+RUN conda config --add channels conda-forge
+RUN conda config --add channels bioconda
+
+# install aligners
+RUN conda install -y salmon
+
+RUN conda install -y kallisto
+
+RUN conda install -y hisat2
+
+RUN conda install -y star
+
+RUN conda install -y bwa
+
+# install some other tools
+RUN conda install -y sra-tools
+RUN conda install -y htseq
+RUN conda install -y subread
+RUN conda install trimmomatic
+
+COPY scripts/ /alignment/scripts
+COPY supportfiles/ /alignment/supportfiles
+
+WORKDIR /alignment
+
+RUN chmod -R 777 /alignment
+
+
